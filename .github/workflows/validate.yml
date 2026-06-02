@@ -1,0 +1,55 @@
+name: Validate Question Banks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install jsonschema
+        run: pip install jsonschema
+
+      - name: Validate all question banks
+        run: |
+          python - <<'EOF'
+          import json
+          import sys
+          from pathlib import Path
+          import jsonschema
+
+          schema = json.loads(Path("core/schema.json").read_text())
+          banks = sorted(Path("certifications").glob("*/questions.json"))
+
+          if not banks:
+              print("No question banks found — skipping validation")
+              sys.exit(0)
+
+          errors = []
+          for bank_path in banks:
+              data = json.loads(bank_path.read_text())
+              try:
+                  jsonschema.validate(instance=data, schema=schema)
+                  print(f"  OK  {bank_path} ({len(data)} questions)")
+              except jsonschema.ValidationError as e:
+                  errors.append(str(e.message))
+                  print(f"FAIL {bank_path}: {e.message}")
+
+          if errors:
+              print(f"\n{len(errors)} validation error(s) found")
+              sys.exit(1)
+          else:
+              print(f"\nAll {len(banks)} bank(s) valid")
+          EOF
