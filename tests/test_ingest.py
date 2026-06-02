@@ -1,3 +1,5 @@
+"""Tests for CustomViewerParser and merge_questions in scripts/ingest_html.py."""
+
 import sys
 import unittest
 from pathlib import Path
@@ -75,12 +77,16 @@ D.. Ensure that the S3 data does not contain sensitive information.</pre>
 
 
 class TestCustomViewerParser(unittest.TestCase):
+    """Tests for the primary HTML parser (custom question-viewer format)."""
+
     def test_single_question_parsed(self):
+        """A single-question HTML block yields exactly one parsed question."""
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(_SINGLE_Q)
         self.assertEqual(len(p.questions), 1)
 
     def test_question_fields_populated(self):
+        """Parsed question has correct domain, source, options, ID, and added date."""
         p = CustomViewerParser(source="test.html", domain="ML Basics")
         p.feed(_SINGLE_Q)
         q = p.questions[0]
@@ -95,6 +101,7 @@ class TestCustomViewerParser(unittest.TestCase):
         self.assertRegex(q["added"], r"^\d{4}-\d{2}-\d{2}$")
 
     def test_multiselect_correct_is_list(self):
+        """Multi-select answer ('BD') is stored as a sorted list."""
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(_MULTISELECT_Q)
         self.assertEqual(len(p.questions), 1)
@@ -105,12 +112,14 @@ class TestCustomViewerParser(unittest.TestCase):
         self.assertEqual(len(q["correct"]), 2)
 
     def test_hotspot_skipped(self):
+        """HOTSPOT questions with 'nan' options are skipped and counted."""
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(_HOTSPOT_Q)
         self.assertEqual(len(p.questions), 0)
         self.assertEqual(p.skipped_hotspot, 1)
 
     def test_multiline_options_joined(self):
+        """Multi-line option text is joined into a single string."""
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(_MULTILINE_OPT_Q)
         self.assertEqual(len(p.questions), 1)
@@ -121,6 +130,7 @@ class TestCustomViewerParser(unittest.TestCase):
         self.assertNotIn("\n", q["options"]["A"])
 
     def test_same_stem_produces_same_id(self):
+        """Same question stem from different files produces the same stable ID."""
         p1 = CustomViewerParser(source="file1.html", domain="D1")
         p2 = CustomViewerParser(source="file2.html", domain="D2")
         p1.feed(_SINGLE_Q)
@@ -128,6 +138,7 @@ class TestCustomViewerParser(unittest.TestCase):
         self.assertEqual(p1.questions[0]["id"], p2.questions[0]["id"])
 
     def test_two_different_questions_different_ids(self):
+        """Two different question stems produce different IDs."""
         html = _SINGLE_Q + _MULTISELECT_Q
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(html)
@@ -135,6 +146,7 @@ class TestCustomViewerParser(unittest.TestCase):
         self.assertNotEqual(p.questions[0]["id"], p.questions[1]["id"])
 
     def test_explanation_synthesized(self):
+        """Explanation is synthesized and contains the correct answer letter."""
         p = CustomViewerParser(source="test.html", domain="General")
         p.feed(_SINGLE_Q)
         q = p.questions[0]
@@ -143,6 +155,8 @@ class TestCustomViewerParser(unittest.TestCase):
 
 
 class TestMergeQuestions(unittest.TestCase):
+    """Tests for the merge_questions deduplication logic."""
+
     def _make_q(self, qid, stem="A question stem with enough text."):
         return {
             "id": qid,
@@ -157,12 +171,14 @@ class TestMergeQuestions(unittest.TestCase):
         }
 
     def test_new_question_added(self):
+        """A new unique question increments new_count and is added to the bank."""
         new_count, skipped, merged = merge_questions({}, [self._make_q("aaa111bbb222")])
         self.assertEqual(new_count, 1)
         self.assertEqual(skipped, 0)
         self.assertEqual(len(merged), 1)
 
     def test_duplicate_id_skipped(self):
+        """A question with an already-existing ID is counted as skipped."""
         existing = {"aaa111bbb222": self._make_q("aaa111bbb222")}
         new_count, skipped, merged = merge_questions(existing, [self._make_q("aaa111bbb222")])
         self.assertEqual(new_count, 0)
@@ -170,6 +186,7 @@ class TestMergeQuestions(unittest.TestCase):
         self.assertEqual(len(merged), 1)
 
     def test_cross_file_duplicate_deduplicated(self):
+        """Duplicate within the same ingest batch is also deduplicated."""
         q = self._make_q("aaa111bbb222")
         new_count, skipped, merged = merge_questions({}, [q, q])
         self.assertEqual(new_count, 1)
@@ -177,6 +194,7 @@ class TestMergeQuestions(unittest.TestCase):
         self.assertEqual(len(merged), 1)
 
     def test_merged_list_sorted_by_added(self):
+        """Merged output is sorted by the 'added' date field."""
         q1 = self._make_q("aaa111bbb222")
         q1["added"] = "2024-03-01"
         q2 = self._make_q("ccc333ddd444")

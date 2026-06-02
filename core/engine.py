@@ -27,6 +27,8 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
 class QuestionBank:
+    """Loads and filters a certification question bank from disk."""
+
     def __init__(self, cert: str, bank_root: Path = None):
         root = bank_root or (_PROJECT_ROOT / "certifications")
         bank_path = root / cert / "questions.json"
@@ -37,13 +39,16 @@ class QuestionBank:
 
     @property
     def domains(self) -> list:
+        """Return sorted list of unique domain names in the bank."""
         return sorted(set(q["domain"] for q in self._questions))
 
     @property
     def total(self) -> int:
+        """Return total number of questions in the bank."""
         return len(self._questions)
 
     def get_questions(self, domain=None, count=None, shuffle=False, seed=None) -> list:
+        """Return a filtered, optionally shuffled, optionally truncated question list."""
         questions = [q for q in self._questions if domain is None or q["domain"] == domain]
         if shuffle:
             rng = random.Random(seed)
@@ -59,6 +64,7 @@ class QuestionBank:
 
 
 def _out(text=""):
+    """Print text via rich if available, otherwise plain print."""
     if RICH_AVAILABLE:
         _console.print(text)
     else:
@@ -66,16 +72,19 @@ def _out(text=""):
 
 
 def _err(text):
+    """Print an error message to stderr."""
     print(f"[error] {text}", file=sys.stderr)
 
 
 def _fmt_correct(correct) -> str:
+    """Format the correct answer(s) as a human-readable string."""
     if isinstance(correct, list):
         return ", ".join(correct)
     return correct
 
 
 def _check_answer(raw: str, correct) -> bool:
+    """Return True if the user's raw answer matches the correct answer."""
     if isinstance(correct, list):
         given = set(a.strip().upper() for a in raw.split(",") if a.strip())
         return given == set(correct)
@@ -83,12 +92,14 @@ def _check_answer(raw: str, correct) -> bool:
 
 
 def _prompt_answer(correct) -> str:
+    """Prompt the user for an answer, adjusting the prompt for multi-select questions."""
     if isinstance(correct, list):
         return input("Your answers (comma-separated, e.g. A,C): ").strip()
     return input("Your answer [A-F]: ").strip()
 
 
 def _display_question(q: dict, index: int, total: int, header_extra: str = ""):
+    """Render a question with its options to the terminal."""
     _out()
     header = f"Question {index}/{total}  [{q['domain']}]"
     if header_extra:
@@ -108,6 +119,7 @@ def _display_question(q: dict, index: int, total: int, header_extra: str = ""):
 
 
 def run_quiz(questions: list, show_explanations: bool = True) -> dict:
+    """Run interactive quiz mode and return domain stats and score."""
     total = len(questions)
     correct_count = 0
     domain_stats: dict = {}
@@ -147,6 +159,7 @@ def run_quiz(questions: list, show_explanations: bool = True) -> dict:
 
 
 def run_exam(questions: list, time_limit_minutes: int, pass_threshold: float = 0.70) -> dict | None:
+    """Run timed exam mode; return score dict or None if the user aborts."""
     total = len(questions)
     recorded: dict = {}
     start = time.monotonic()
@@ -211,6 +224,7 @@ def run_exam(questions: list, time_limit_minutes: int, pass_threshold: float = 0
 
 
 def print_score_report(result: dict):
+    """Print a formatted score report to the terminal."""
     domain_stats = result["domain_stats"]
     correct = result["correct"]
     total = result["total"]
@@ -250,6 +264,7 @@ def print_score_report(result: dict):
 
 
 def _list_certs(bank_root: Path) -> list:
+    """Return sorted list of certification slugs with a valid questions.json."""
     if not bank_root.exists():
         return []
     return sorted(
@@ -263,6 +278,7 @@ def _list_certs(bank_root: Path) -> list:
 
 
 def main():
+    """Parse CLI arguments and dispatch to quiz or exam mode."""
     ap = argparse.ArgumentParser(description="CertOps quiz and exam engine.")
     ap.add_argument("--cert", required=True, help="Certification slug, e.g. aws-ai-practitioner")
     ap.add_argument(

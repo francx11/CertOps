@@ -76,6 +76,8 @@ def generate_id(question_text: str) -> str:
 
 
 class CustomViewerParser(html.parser.HTMLParser):
+    """SAX-style parser for the custom question-viewer HTML format."""
+
     _OPTION_RE = re.compile(r"^([A-F])\.\.\s*(.+)", re.DOTALL)
     _ANSWER_RE = re.compile(r"Respuesta correcta:\s*([A-F]+|\[Image[^\]]*\])", re.IGNORECASE)
 
@@ -99,6 +101,7 @@ class CustomViewerParser(html.parser.HTMLParser):
     # -- HTMLParser interface ------------------------------------------------
 
     def handle_starttag(self, tag, attrs):
+        """Track entry into question blocks, stems, option pres, and answer divs."""
         attr = dict(attrs)
         classes = attr.get("class", "").split()
         style = attr.get("style", "")
@@ -135,6 +138,7 @@ class CustomViewerParser(html.parser.HTMLParser):
             self._stem_buf.append(" ")
 
     def handle_endtag(self, tag):
+        """Close open blocks and trigger question finalization on </div.correct-answer>."""
         if not self._in_question:
             return
 
@@ -157,6 +161,7 @@ class CustomViewerParser(html.parser.HTMLParser):
                 self._in_question = False
 
     def handle_data(self, data):
+        """Accumulate text into the active buffer (stem, pre, or answer)."""
         if self._in_stem:
             self._stem_buf.append(data)
         elif self._in_pre:
@@ -167,6 +172,7 @@ class CustomViewerParser(html.parser.HTMLParser):
     # -- Internal helpers ---------------------------------------------------
 
     def _reset_buffers(self):
+        """Clear all per-question accumulators."""
         self._stem_buf = []
         self._pre_buf = []
         self._answer_buf = []
@@ -175,6 +181,7 @@ class CustomViewerParser(html.parser.HTMLParser):
         self._in_answer = False
 
     def _parse_options(self, pre_text: str) -> dict:
+        """Parse the <pre> block into an {A: text, B: text, ...} options dict."""
         options: dict = {}
         current_key = None
         current_lines: list = []
@@ -196,7 +203,7 @@ class CustomViewerParser(html.parser.HTMLParser):
         return options
 
     def _parse_correct(self, answer_text: str):
-        """Returns str (single) or list (multi-select), or None for hotspot."""
+        """Return str (single) or list (multi-select), or None for hotspot."""
         m = self._ANSWER_RE.search(answer_text)
         if not m:
             return None
@@ -211,6 +218,7 @@ class CustomViewerParser(html.parser.HTMLParser):
         return sorted(set(letters))
 
     def _finalize_question(self):
+        """Validate and append the current question to self.questions, then reset."""
         stem = _clean_text("".join(self._stem_buf))
         pre_text = "".join(self._pre_buf)
         answer_text = "".join(self._answer_buf)
@@ -271,12 +279,14 @@ class GenericQAParser:
     _ANS_RE = re.compile(r"(?:Answer|Correct)[:\s]+([A-F]+)", re.IGNORECASE)
 
     def __init__(self, source: str, domain: str):
+        """Initialize parser state for a single source file."""
         self.source = source
         self.domain = domain
         self.questions: list = []
         self.skipped_hotspot: int = 0
 
     def parse(self, text: str):
+        """Parse plain text into questions using line-pattern heuristics."""
         lines = text.splitlines()
         stem_parts: list = []
         options: dict = {}
@@ -343,12 +353,14 @@ class GenericQAParser:
 
 
 def detect_parser(content: str) -> str:
+    """Return 'custom_viewer' or 'generic' based on HTML fingerprint."""
     if 'class="question"' in content and "correct-answer" in content:
         return "custom_viewer"
     return "generic"
 
 
 def ingest_file(path: Path, domain: str, verbose: bool) -> list:
+    """Parse one HTML file and return a list of raw question dicts."""
     content = path.read_text(encoding="utf-8", errors="replace")
     fmt = detect_parser(content)
     source = path.name
@@ -380,10 +392,7 @@ def load_existing(output_path: Path) -> dict:
 
 
 def merge_questions(existing: dict, new_questions: list) -> tuple:
-    """
-    Merge new_questions into existing bank.
-    Returns (new_count, skipped_count, sorted_list).
-    """
+    """Merge new_questions into existing bank; return (new_count, skipped_count, sorted_list)."""
     new_count = 0
     skipped_count = 0
     seen = set(existing.keys())
@@ -406,6 +415,7 @@ def merge_questions(existing: dict, new_questions: list) -> tuple:
 
 
 def main():
+    """Parse CLI arguments and run the ingest pipeline."""
     ap = argparse.ArgumentParser(
         description="Ingest HTML question dumps into a CertOps question bank."
     )

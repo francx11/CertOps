@@ -3,9 +3,12 @@ target-version = "py311"
 line-length = 100
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP"]
+select = ["E", "F", "W", "I", "UP", "D"]
 ignore = [
-    "D",    # pydocstyle — no docstrings required
+    "D203",  # conflicts with D211 (no-blank-line-before-class)
+    "D213",  # conflicts with D212 (multi-line-summary-first-line)
+    "D105",  # magic method docstrings not required
+    "D107",  # __init__ docstring not required
 ]
 
 [tool.ruff.lint.per-file-ignores]
