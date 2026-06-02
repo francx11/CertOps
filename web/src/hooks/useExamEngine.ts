@@ -103,7 +103,9 @@ export function useExamEngine() {
     dispatch({ type: 'SUBMIT', payload: computeResult(questions, final) })
   }, [state, dispatch])
 
+  const previousQuestion = useCallback(() => dispatch({ type: 'BACK' }), [dispatch])
+
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [dispatch])
 
-  return { state, loadAndStart, selectAnswer, confirmAnswer, nextQuestion, submitExam, reset }
+  return { state, loadAndStart, selectAnswer, confirmAnswer, nextQuestion, previousQuestion, submitExam, reset }
 }

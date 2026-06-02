@@ -1,24 +1,64 @@
 import { useState, useEffect } from 'react'
 import { BookOpen, Zap, ChevronRight, Loader2 } from 'lucide-react'
-import type { ExamConfig, QuizLength } from '../types'
+import type { ExamConfig } from '../types'
 import { useExamEngine } from '../hooks/useExamEngine'
 
 const CERT_LABELS: Record<string, string> = {
   'aws-ai-practitioner': 'AWS AI Practitioner',
 }
 
-const QUIZ_LENGTHS: { count: QuizLength; label: string }[] = [
-  { count: 10, label: '10' },
-  { count: 20, label: '20' },
-  { count: 30, label: '30' },
-]
+const QUIZ_PRESETS = [10, 20, 30]
+const EXAM_PRESETS = [30, 65]
+
+function CountSelector({
+  value,
+  onChange,
+  presets,
+}: {
+  value: number
+  onChange: (n: number) => void
+  presets: number[]
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        {presets.map(n => (
+          <button
+            key={n}
+            onClick={() => onChange(n)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
+              value === n
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
+            }`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <input
+        type="number"
+        min={1}
+        max={500}
+        value={value}
+        onChange={e => {
+          const n = parseInt(e.target.value)
+          if (!isNaN(n) && n >= 1) onChange(n)
+        }}
+        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Número personalizado"
+      />
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const { loadAndStart } = useExamEngine()
   const [certs, setCerts] = useState<string[]>([])
   const [selectedCert, setSelectedCert] = useState('')
   const [mode, setMode] = useState<'quiz' | 'exam'>('quiz')
-  const [quizCount, setQuizCount] = useState<QuizLength>(20)
+  const [quizCount, setQuizCount] = useState(20)
+  const [examCount, setExamCount] = useState(65)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,7 +77,7 @@ export default function Dashboard() {
     setLoading(true)
     setError(null)
     try {
-      const count: QuizLength = mode === 'exam' ? 65 : quizCount
+      const count = mode === 'exam' ? examCount : quizCount
       const config: ExamConfig = { cert: selectedCert, mode, count }
       await loadAndStart(config)
     } catch (e) {
@@ -118,34 +158,22 @@ export default function Dashboard() {
                   <BookOpen className="w-4 h-4" />
                   Examen Real
                 </div>
-                <span className="text-xs text-gray-400">65 preguntas · al final</span>
+                <span className="text-xs text-gray-400">Sin feedback · al final</span>
               </button>
             </div>
           </div>
 
-          {/* Quiz length */}
-          {mode === 'quiz' && (
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Número de preguntas
-              </label>
-              <div className="flex gap-2">
-                {QUIZ_LENGTHS.map(o => (
-                  <button
-                    key={o.count}
-                    onClick={() => setQuizCount(o.count)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                      quizCount === o.count
-                        ? 'bg-blue-600 border-blue-500 text-white'
-                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500'
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Question count */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              Número de preguntas
+            </label>
+            {mode === 'quiz' ? (
+              <CountSelector value={quizCount} onChange={setQuizCount} presets={QUIZ_PRESETS} />
+            ) : (
+              <CountSelector value={examCount} onChange={setExamCount} presets={EXAM_PRESETS} />
+            )}
+          </div>
 
           {error && certs.length > 0 && (
             <p className="text-red-400 text-sm">{error}</p>

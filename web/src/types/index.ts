@@ -11,12 +11,11 @@ export interface Question {
 }
 
 export type QuizMode = 'quiz' | 'exam'
-export type QuizLength = 10 | 20 | 30 | 65
 
 export interface ExamConfig {
   cert: string
   mode: QuizMode
-  count: QuizLength
+  count: number
 }
 
 export interface DomainResult {

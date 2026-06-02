@@ -20,6 +20,7 @@ type ExamAction =
   | { type: 'SELECT_ANSWER'; payload: string | string[] }
   | { type: 'SHOW_FEEDBACK' }
   | { type: 'ADVANCE'; payload: Answers }
+  | { type: 'BACK' }
   | { type: 'SUBMIT'; payload: ExamResult }
   | { type: 'RESET' }
 
@@ -72,6 +73,19 @@ function reducer(state: ExamState, action: ExamAction): ExamState {
         selectedAnswer: null,
         showFeedback: false,
       }
+
+    case 'BACK': {
+      if (state.currentIndex === 0) return state
+      const prevIndex = state.currentIndex - 1
+      const prevQ = state.questions[prevIndex]
+      const prevAnswer = state.answers[prevQ.id] ?? null
+      return {
+        ...state,
+        currentIndex: prevIndex,
+        selectedAnswer: prevAnswer,
+        showFeedback: prevAnswer !== null && state.config?.mode === 'quiz',
+      }
+    }
 
     case 'SUBMIT':
       return { ...state, result: action.payload, screen: 'results' }
