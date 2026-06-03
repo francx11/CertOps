@@ -57,6 +57,11 @@ function computeResult(questions: Question[], answers: Answers): ExamResult {
   }
 }
 
+function filterByDomain(questions: Question[], domainNumber: number): Question[] {
+  const pattern = new RegExp(`\\bDomain\\s*${domainNumber}\\b`, 'i')
+  return questions.filter(q => pattern.test(q.domain))
+}
+
 export function useExamEngine() {
   const { state, dispatch } = useExamContext()
 
@@ -66,9 +71,22 @@ export function useExamEngine() {
       const res = await fetch(`/api/questions?cert=${encodeURIComponent(config.cert)}`)
       if (!res.ok) throw new Error(`Error al cargar preguntas para ${config.cert}`)
       const all: Question[] = await res.json()
-      const shuffled = seededShuffle(all, Date.now()).slice(0, config.count)
+
+      const filtered =
+        config.domainNumber !== undefined ? filterByDomain(all, config.domainNumber) : all
+      const pool = filtered.length > 0 ? filtered : all
+
+      if (pool.length === 0) throw new Error('No hay preguntas disponibles para esta certificación')
+
+      const count = Math.min(config.count, pool.length)
+      const shuffled = seededShuffle(pool, Date.now()).slice(0, count)
       dispatch({ type: 'LOAD_QUESTIONS', payload: shuffled })
     },
+    [dispatch]
+  )
+
+  const enterTheory = useCallback(
+    (cert: string) => dispatch({ type: 'ENTER_THEORY', payload: cert }),
     [dispatch]
   )
 
@@ -107,5 +125,15 @@ export function useExamEngine() {
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), [dispatch])
 
-  return { state, loadAndStart, selectAnswer, confirmAnswer, nextQuestion, previousQuestion, submitExam, reset }
+  return {
+    state,
+    loadAndStart,
+    enterTheory,
+    selectAnswer,
+    confirmAnswer,
+    nextQuestion,
+    previousQuestion,
+    submitExam,
+    reset,
+  }
 }

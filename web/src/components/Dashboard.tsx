@@ -1,13 +1,8 @@
 import { useState, useEffect } from 'react'
-import { BookOpen, Zap, ChevronRight, Loader2 } from 'lucide-react'
+import { BookOpen, Zap, ChevronRight, Loader2, GraduationCap } from 'lucide-react'
 import type { ExamConfig } from '../types'
 import { useExamEngine } from '../hooks/useExamEngine'
-
-const CERT_LABELS: Record<string, string> = {
-  'aws-ai-practitioner': 'AWS AI Practitioner',
-}
-
-const QUIZ_PRESETS = [10, 20, 30]
+import { CERT_LABELS, QUIZ_PRESETS } from '../constants'
 
 function CountSelector({
   value,
@@ -52,7 +47,7 @@ function CountSelector({
 }
 
 export default function Dashboard() {
-  const { loadAndStart } = useExamEngine()
+  const { loadAndStart, enterTheory } = useExamEngine()
   const [certs, setCerts] = useState<string[]>([])
   const [selectedCert, setSelectedCert] = useState('')
   const [mode, setMode] = useState<'quiz' | 'exam'>('quiz')
@@ -82,6 +77,11 @@ export default function Dashboard() {
       setError(e instanceof Error ? e.message : 'Error al iniciar')
       setLoading(false)
     }
+  }
+
+  function handleStudyTheory() {
+    if (!selectedCert) return
+    enterTheory(selectedCert)
   }
 
   return (
@@ -175,20 +175,31 @@ export default function Dashboard() {
             <p className="text-red-400 text-sm">{error}</p>
           )}
 
-          <button
-            onClick={handleStart}
-            disabled={loading || !selectedCert}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                Comenzar
-                <ChevronRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={handleStart}
+              disabled={loading || !selectedCert}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Comenzar
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleStudyTheory}
+              disabled={!selectedCert}
+              className="w-full flex items-center justify-center gap-2 border border-purple-700 hover:border-purple-500 hover:bg-purple-900/20 disabled:opacity-40 disabled:cursor-not-allowed text-purple-300 font-semibold py-3 rounded-xl transition-colors"
+            >
+              <GraduationCap className="w-4 h-4" />
+              Estudiar Teoría
+            </button>
+          </div>
         </div>
       </div>
     </div>

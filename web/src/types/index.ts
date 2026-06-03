@@ -16,6 +16,14 @@ export interface ExamConfig {
   cert: string
   mode: QuizMode
   count: number
+  domainNumber?: number
+}
+
+export interface TheoryDomain {
+  slug: string
+  name: string
+  number: number
+  filename: string
 }
 
 export interface DomainResult {
@@ -39,4 +47,4 @@ export interface ExamResult {
   answeredQuestions: AnsweredQuestion[]
 }
 
-export type AppScreen = 'dashboard' | 'quiz' | 'results'
+export type AppScreen = 'dashboard' | 'quiz' | 'results' | 'theory'

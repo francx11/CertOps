@@ -12,6 +12,7 @@ interface ExamState {
   selectedAnswer: string | string[] | null
   showFeedback: boolean
   result: ExamResult | null
+  theoryCert: string | null
 }
 
 type ExamAction =
@@ -23,6 +24,7 @@ type ExamAction =
   | { type: 'BACK' }
   | { type: 'SUBMIT'; payload: ExamResult }
   | { type: 'RESET' }
+  | { type: 'ENTER_THEORY'; payload: string }
 
 const initialState: ExamState = {
   screen: 'dashboard',
@@ -33,6 +35,7 @@ const initialState: ExamState = {
   selectedAnswer: null,
   showFeedback: false,
   result: null,
+  theoryCert: null,
 }
 
 function reducer(state: ExamState, action: ExamAction): ExamState {
@@ -92,6 +95,9 @@ function reducer(state: ExamState, action: ExamAction): ExamState {
 
     case 'RESET':
       return initialState
+
+    case 'ENTER_THEORY':
+      return { ...initialState, screen: 'theory', theoryCert: action.payload }
 
     default:
       return state
