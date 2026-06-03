@@ -8,7 +8,6 @@ const CERT_LABELS: Record<string, string> = {
 }
 
 const QUIZ_PRESETS = [10, 20, 30]
-const EXAM_PRESETS = [30, 65]
 
 function CountSelector({
   value,
@@ -19,30 +18,12 @@ function CountSelector({
   onChange: (n: number) => void
   presets: number[]
 }) {
-  const [draft, setDraft] = useState(String(value))
-
-  useEffect(() => {
-    setDraft(String(value))
-  }, [value])
-
-  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
-    setDraft(e.target.value)
-    const n = parseInt(e.target.value)
-    if (!isNaN(n) && n >= 1) onChange(n)
-  }
-
-  function handleBlur() {
-    const n = parseInt(draft)
-    if (isNaN(n) || n < 1) setDraft(String(value))
-  }
-
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
         {presets.map(n => (
           <button
             key={n}
-            type="button"
             onClick={() => onChange(n)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
               value === n
@@ -58,9 +39,11 @@ function CountSelector({
         type="number"
         min={1}
         max={500}
-        value={draft}
-        onChange={handleInput}
-        onBlur={handleBlur}
+        value={value}
+        onChange={e => {
+          const n = parseInt(e.target.value)
+          if (!isNaN(n) && n >= 1) onChange(n)
+        }}
         className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Número personalizado"
       />
@@ -74,7 +57,6 @@ export default function Dashboard() {
   const [selectedCert, setSelectedCert] = useState('')
   const [mode, setMode] = useState<'quiz' | 'exam'>('quiz')
   const [quizCount, setQuizCount] = useState(20)
-  const [examCount, setExamCount] = useState(65)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,7 +75,7 @@ export default function Dashboard() {
     setLoading(true)
     setError(null)
     try {
-      const count = mode === 'exam' ? examCount : quizCount
+      const count = mode === 'exam' ? 65 : quizCount
       const config: ExamConfig = { cert: selectedCert, mode, count }
       await loadAndStart(config)
     } catch (e) {
@@ -179,17 +161,15 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Question count */}
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Número de preguntas
-            </label>
-            {mode === 'quiz' ? (
+          {/* Question count — only in quiz mode */}
+          {mode === 'quiz' && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                Número de preguntas
+              </label>
               <CountSelector value={quizCount} onChange={setQuizCount} presets={QUIZ_PRESETS} />
-            ) : (
-              <CountSelector value={examCount} onChange={setExamCount} presets={EXAM_PRESETS} />
-            )}
-          </div>
+            </div>
+          )}
 
           {error && certs.length > 0 && (
             <p className="text-red-400 text-sm">{error}</p>
