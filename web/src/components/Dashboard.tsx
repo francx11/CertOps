@@ -19,12 +19,30 @@ function CountSelector({
   onChange: (n: number) => void
   presets: number[]
 }) {
+  const [draft, setDraft] = useState(String(value))
+
+  useEffect(() => {
+    setDraft(String(value))
+  }, [value])
+
+  function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+    setDraft(e.target.value)
+    const n = parseInt(e.target.value)
+    if (!isNaN(n) && n >= 1) onChange(n)
+  }
+
+  function handleBlur() {
+    const n = parseInt(draft)
+    if (isNaN(n) || n < 1) setDraft(String(value))
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
         {presets.map(n => (
           <button
             key={n}
+            type="button"
             onClick={() => onChange(n)}
             className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
               value === n
@@ -40,11 +58,9 @@ function CountSelector({
         type="number"
         min={1}
         max={500}
-        value={value}
-        onChange={e => {
-          const n = parseInt(e.target.value)
-          if (!isNaN(n) && n >= 1) onChange(n)
-        }}
+        value={draft}
+        onChange={handleInput}
+        onBlur={handleBlur}
         className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Número personalizado"
       />
