@@ -114,6 +114,25 @@ VPC del cliente
 | Amazon Fraud Detector | Detección de fraude en transacciones | No aplica a acceso a APIs |
 | AWS Trusted Advisor | Recomendaciones de buenas prácticas | No es auditoría de acceso |
 
+### 2.5b Amazon S3 — Clases de Almacenamiento para Retención de Logs a Largo Plazo
+
+Cuando el requisito combina **auditoría de API calls** (CloudTrail) con **retención de larga duración al menor coste posible**, es necesario seleccionar la clase de almacenamiento S3 correcta para los logs exportados.
+
+| Clase S3 | Recuperación | Coste relativo | Cuándo usar |
+|---|---|---|---|
+| **S3 Standard** | Inmediata | Alto | Logs activos, acceso muy frecuente |
+| **S3 Standard-IA** | Inmediata | Medio | Acceso infrecuente, recuperación ocasional |
+| **S3 Glacier Instant Retrieval** | Milisegundos | Bajo | Archivos accedidos < 1 vez/trimestre |
+| **S3 Glacier Flexible Retrieval** | Minutos–horas | Muy bajo | Archivos de auditoría con recuperación ocasional |
+| **S3 Glacier Deep Archive** | 12–48 horas | **Mínimo** | Retención 7–10+ años, raramente accedidos |
+
+**Reglas del examen:**
+- "Log all requests to Bedrock API + retain securely for 5 years at lowest possible cost" → **AWS CloudTrail** (captura los API calls) + **Amazon S3 Glacier** (almacenamiento de bajo coste para logs exportados)
+- "Lowest cost storage class for long-term log retention" → **S3 Glacier** o **S3 Glacier Deep Archive**
+- "5 años + acceso rarísimo + mínimo coste" → **S3 Glacier Deep Archive**
+
+> **Trampa del examen:** S3 Standard es necesario para logs activos pero NO para retención a largo plazo. Para 5+ años con acceso mínimo, siempre elegir **S3 Glacier** (no S3 Standard, no S3-IA).
+
 ### 2.5 Amazon CloudWatch — Monitoreo de aplicaciones de IA
 
 **Qué resuelve:** métricas operacionales, logs de aplicación, alarmas.
@@ -335,6 +354,8 @@ Elemento clave de gobernanza: el factor humano es frecuentemente el eslabón má
 | Cifrar artefactos de model customization con clave propia | **AWS KMS** (customer-managed key) |
 | Identificar accesos no autorizados a APIs de Bedrock | **AWS CloudTrail** |
 | Equipos separados acceden a datos separados en Bedrock | **IAM Role por equipo** (least privilege) |
+| Log all API requests + retain for 5 years at lowest cost (choose two) | **AWS CloudTrail** + **Amazon S3 Glacier** |
+| Long-term log retention (5+ years) at minimum cost | **Amazon S3 Glacier** (o S3 Glacier Deep Archive) |
 | Recibir compliance reports de ISVs/auditores externos | **AWS Artifact** |
 | Automatizar recopilación de evidencias de cumplimiento | **AWS Audit Manager** |
 | Monitorear cumplimiento de configuraciones de recursos | **AWS Config** |

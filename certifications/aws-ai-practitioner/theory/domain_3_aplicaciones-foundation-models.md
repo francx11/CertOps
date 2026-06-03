@@ -196,6 +196,31 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 
 ---
 
+### 1.11 Conversación Multi-turno y Memoria de Contexto
+
+**Problema:** Los LLMs son **sin estado (stateless)** por defecto. Cada llamada a la API del FM es independiente — el modelo no recuerda automáticamente los mensajes anteriores.
+
+**Solución:** La aplicación mantiene el historial de conversación y lo inyecta como contexto en cada llamada al FM.
+
+**Patrones de implementación:**
+
+| Patrón | Mecanismo | Cuándo usar |
+|---|---|---|
+| **Window Buffer Memory** | Se pasan las últimas N interacciones en el array `messages` de la llamada a la API | Conversaciones cortas que caben en el context window |
+| **DynamoDB Memory** | Historial persistido en Amazon DynamoDB por `session_id`; se recupera y se pasa en cada llamada | Sesiones que deben sobrevivir reinicios de la aplicación |
+| **Vector Store Memory** | Mensajes anteriores almacenados en una BD vectorial; se recuperan los fragmentos más relevantes semánticamente | Conversaciones muy largas donde el historial completo no cabe en el contexto |
+
+**En Amazon Bedrock:**
+- **Sin Agents:** La aplicación pasa el historial en el campo `messages` (array de turns usuario/asistente) de cada llamada. El FM "ve" toda la conversación como contexto.
+- **Con Bedrock Agents:** El agente gestiona automáticamente el estado de sesión (`session_id`) dentro de una conversación.
+
+**Cuándo el examen lo pide:**
+- "Chatbot que necesita usar contenido de mensajes anteriores del cliente" → incluir **conversation history en el contexto del FM** (messages array / context window)
+- "Múltiples interacciones para resolver una solicitud" → **session state / conversation history in context**
+- "LLM que recuerda el historial de la conversación" → pasar los mensajes anteriores como contexto en cada llamada
+
+---
+
 ## 2. Servicios de IA Gestionados de AWS
 
 ### 2.1 Amazon Comprehend
@@ -213,6 +238,23 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 - "Sentimientos de reviews de clientes" → **Comprehend** (o Bedrock)
 - "Detectar lenguaje tóxico/dañino en comentarios **sin datos etiquetados**" → **Comprehend** (toxicity detection es pre-entrenado)
 - "Identificar entidades en texto" → **Comprehend**
+
+> **"Choose two" para sentiment analysis:** La pregunta puede pedir dos servicios para análisis de sentimiento de reviews → **Amazon Comprehend** + **Amazon Bedrock** (ambos son válidos y complementarios).
+
+---
+
+### 2.1b Amazon Bedrock para Summarization y Casos Generativos
+
+Cuando la tarea requiere **generar un resumen**, un **overview conciso**, o cualquier output generativo basado en texto (no solo clasificar sentimiento):
+
+- **"Provide a concise overview of each medication based on user reviews"** → el resumen generativo es tarea de un **FM en Amazon Bedrock**, no de Comprehend.
+- Comprehend clasifica o extrae (sentimiento, entidades). Bedrock genera texto nuevo.
+
+| Tarea | Servicio correcto |
+|---|---|
+| Clasificar sentimiento (positivo/negativo/neutro) | Amazon Comprehend (o Bedrock) |
+| Generar resumen o overview a partir de reviews | **Amazon Bedrock** (FM para summarization) |
+| Extraer entidades / PII de texto | Amazon Comprehend |
 
 ---
 
@@ -330,6 +372,24 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 
 ---
 
+### 2.11 Text-to-SQL con Foundation Models
+
+**Qué es:** Capacidad de un Foundation Model para convertir preguntas en lenguaje natural a consultas SQL ejecutables, permitiendo a usuarios no técnicos consultar bases de datos.
+
+**Cuándo usar:**
+- Empleados sin experiencia técnica necesitan obtener datos de una base de datos empresarial
+- Construir una aplicación que traduzca preguntas de texto a SQL
+
+**Solución AWS:** **Amazon Bedrock** (FM con capacidad de generación de código/SQL). El FM recibe el esquema de la BD + la pregunta en lenguaje natural y devuelve la query SQL lista para ejecutar.
+
+**Cuándo el examen lo pide:**
+- "Build SQL query from input text" + "employees with minimal technical experience" → **Amazon Bedrock** (FM para generación de SQL)
+- "Non-technical users query a database using natural language" → **Amazon Bedrock** (LLM para text-to-SQL)
+
+> **Distinción:** Amazon Q in QuickSight genera visualizaciones/dashboards. Amazon Bedrock genera SQL raw para ejecutar en cualquier base de datos. La clave es qué necesita la empresa: ¿gráficos (QuickSight) o queries SQL (Bedrock)?
+
+---
+
 ## 3. Matriz de Personalización de Modelos
 
 | Factor | Prompt Engineering | RAG | Fine-Tuning | Pre-entrenamiento continuo |
@@ -393,6 +453,21 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 | **Amazon CloudWatch** | Métricas operacionales (latencia, errores, throughput) | Alarmas y dashboards operacionales |
 | **SageMaker Clarify** | Bias y explicabilidad (pre y post producción) | Detectar sesgo en datos de entrenamiento o inferencia |
 
+### 5.1 Evaluación y Comparación de Modelos (Toxicidad y Calidad)
+
+Cuando la necesidad es **comparar múltiples LLMs** evaluando métricas como toxicidad, bias o calidad de outputs con el **menor overhead operacional**:
+
+**Para modelos en SageMaker JumpStart:**
+- **Amazon SageMaker Clarify** → evalúa toxicidad, sesgo y explicabilidad de los outputs de modelos. Permite evaluar y comparar múltiples modelos de forma sistemática sin construir pipelines personalizados.
+
+**Para modelos en Amazon Bedrock:**
+- **Amazon Bedrock Model Evaluation** → feature nativa de Bedrock para comparar FMs side-by-side usando métricas automáticas (ROUGE, BERTScore) o evaluación humana.
+
+**Cuándo el examen lo pide:**
+- "Compare output toxicity of LLMs on SageMaker JumpStart with LEAST operational overhead" → **Amazon SageMaker Clarify**
+- "Evaluate and compare quality of multiple FMs in Bedrock" → **Bedrock Model Evaluation**
+- "Systematic toxicity/bias evaluation with minimal setup" → **SageMaker Clarify**
+
 ---
 
 ## 6. Patrones de Examen — Cheat Sheet
@@ -424,6 +499,7 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 | "Extraer texto de PDF / formulario / resume" | **Amazon Textract** |
 | "Audio de llamadas" + "extraer información" | **Amazon Transcribe** |
 | "Análisis de sentimiento de reviews" | **Amazon Comprehend** (o Bedrock) |
+| "Sentiment analysis of reviews (choose two)" | **Amazon Comprehend** + **Amazon Bedrock** |
 | "Detectar lenguaje tóxico/dañino" | **Amazon Comprehend** (toxicity detection) |
 | "Traducir a múltiples idiomas" | **Amazon Translate** |
 | "Texto a voz / narración" | **Amazon Polly** |
@@ -437,6 +513,12 @@ Amazon Bedrock es un servicio **serverless y totalmente gestionado** que proporc
 | "Sin experiencia técnica" + "ML predictivo" | **SageMaker Canvas** |
 | "Documentar modelo para transparencia" | **SageMaker Model Cards** |
 | "Detectar drift / degradación en producción" | **SageMaker Model Monitor** |
+| "Analyze reviews + concise overview / summary per item" | **Amazon Bedrock** (FM para summarization) |
+| "Build SQL query from text / non-technical users query database" | **Amazon Bedrock** (FM para text-to-SQL) |
+| "Chatbot multi-turno / recordar mensajes anteriores del cliente" | **Conversation history in context window** (pasar mensajes previos al FM) |
+| "Feature de OpenSearch para vector database applications" | **k-NN feature/plugin** de Amazon OpenSearch Service |
+| "Compare toxicity of LLMs on SageMaker JumpStart (least overhead)" | **Amazon SageMaker Clarify** |
+| "Evaluate and compare multiple FMs in Bedrock" | **Bedrock Model Evaluation** |
 
 ### 6.3 Trampas Frecuentes D3
 
@@ -538,7 +620,9 @@ Todo modelo FM implica una tensión entre tres ejes que no se pueden optimizar s
 | **Amazon OpenSearch Serverless** | Motor de búsqueda / ANN vectorial | Vector store por defecto en Bedrock Knowledge Bases; búsqueda híbrida (texto + vector); escala automática |
 | **Amazon Neptune** | Grafos (con soporte vectorial) | Datos con relaciones complejas entre entidades (grafos de conocimiento); combinar búsqueda vectorial con traversal de grafo |
 | **pgvector (en Amazon RDS/Aurora PostgreSQL)** | Relacional + extensión vectorial | Datos ya en PostgreSQL; joins con tablas relacionales; familiaridad del equipo con SQL |
-| **Amazon DocumentDB** | Documento (MongoDB-compatible) + vectorial | Datos semiestructurados (JSON); equipos que ya usan MongoDB/DocumentDB |
+| **Amazon DocumentDB** | Documento (MongoDB-compatible) + vectorial | Datos semiestructurados (JSON); equipos que ya usan MongoDB/documentDB |
+
+> **Amazon OpenSearch Service — feature k-NN:** La capacidad vectorial de OpenSearch está basada en su **plugin/feature k-NN (k-Nearest Neighbors)**, que habilita búsqueda por similitud vectorial usando algoritmos ANN (HNSW, Faiss, NMSLIB). Cuando el examen pregunta "¿qué feature de Amazon OpenSearch Service permite construir aplicaciones de vector database?" → la respuesta es **k-NN** (k-nearest neighbor feature). Es el mecanismo interno que convierte OpenSearch en un vector store.
 
 ### 9.2 Árbol de decisión
 

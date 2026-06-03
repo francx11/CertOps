@@ -277,6 +277,7 @@ Este es uno de los temas **más preguntados del D1**. Hay 4 modos y el examen da
 - **Tipo:** Clasificación o regresión
 - **Mecanismo:** Clasifica según los k vecinos más cercanos en el espacio de features
 - **Clave del examen:** "Recomendar productos similares a los que el cliente compró" → k-NN
+- **Clave del examen:** "Predecir la clasificación de flores/organismos basándose en medidas numéricas (longitud de pétalos, anchura de sépalos, etc.)" → k-NN
 
 ### K-means
 
@@ -337,6 +338,7 @@ Este es uno de los temas **más preguntados del D1**. Hay 4 modos y el examen da
 | "predecir sí/no (binario)" + "interpretable" | Logistic Regression |
 | "predecir valor numérico continuo" | Linear Regression |
 | "recomendar items similares" | k-NN |
+| "múltiples features numéricas + clasificar en categorías (flores, genes, muestras biológicas)" | k-NN |
 
 ### Métricas
 
