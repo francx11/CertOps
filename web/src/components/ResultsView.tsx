@@ -20,7 +20,7 @@ function FailedQuestion({ item, index }: { item: AnsweredQuestion; index: number
         <span className="flex-shrink-0 text-xs font-mono text-gray-500 mt-0.5 w-5 text-right">
           {index + 1}
         </span>
-        <p className="text-sm text-gray-200 flex-1 leading-snug line-clamp-2">
+        <p className={`text-sm text-gray-200 flex-1 leading-snug ${open ? '' : 'line-clamp-2'}`}>
           {item.question.question}
         </p>
         <span className="flex-shrink-0 text-gray-500 text-xs mt-0.5">{open ? '▲' : '▼'}</span>
