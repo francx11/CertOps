@@ -17,13 +17,13 @@ function FailedQuestion({ item, index }: { item: AnsweredQuestion; index: number
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-start gap-3 p-4 text-left hover:bg-gray-800/50 transition-colors"
       >
-        <span className="flex-shrink-0 text-xs font-mono text-gray-500 mt-0.5 w-5 text-right">
+        <span className="shrink-0 text-xs font-mono text-gray-500 mt-0.5 w-5 text-right">
           {index + 1}
         </span>
         <p className={`text-sm text-gray-200 flex-1 leading-snug ${open ? '' : 'line-clamp-2'}`}>
           {item.question.question}
         </p>
-        <span className="flex-shrink-0 text-gray-500 text-xs mt-0.5">{open ? '▲' : '▼'}</span>
+        <span className="shrink-0 text-gray-500 text-xs mt-0.5">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -48,10 +48,10 @@ function FailedQuestion({ item, index }: { item: AnsweredQuestion; index: number
                       : 'text-gray-500'
                   }`}
                 >
-                  <span className="font-bold flex-shrink-0">{key}.</span>
+                  <span className="font-bold shrink-0">{key}.</span>
                   <span className="flex-1">{item.question.options[key]}</span>
-                  {isCorrect && <span className="flex-shrink-0">✓</span>}
-                  {wasSelected && !isCorrect && <span className="flex-shrink-0">✗</span>}
+                  {isCorrect && <span className="shrink-0">✓</span>}
+                  {wasSelected && !isCorrect && <span className="shrink-0">✗</span>}
                 </div>
               )
             })}

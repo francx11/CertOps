@@ -63,7 +63,7 @@ export default function QuestionCard({ question, selectedAnswer, onSelect, showF
             onClick={() => handleClick(key)}
             className={optionClass(key, selectedAnswer, question.correct, showFeedback)}
           >
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
+            <span className="shrink-0 w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
               {key}
             </span>
             <span className="text-sm leading-snug">{question.options[key]}</span>

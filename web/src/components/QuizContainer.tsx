@@ -11,7 +11,7 @@ interface ConfirmModalProps {
 
 function ConfirmModal({ message, onConfirm, onCancel }: ConfirmModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl">
         <p className="text-white text-sm leading-relaxed mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
@@ -94,12 +94,12 @@ export default function QuizContainer() {
         />
       )}
 
-      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur sticky top-0 z-10">
+      <header className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <span className="text-xs font-medium text-gray-400 truncate max-w-[60%]">
             {question.domain}
           </span>
-          <span className="text-xs font-mono text-gray-400 flex-shrink-0">
+          <span className="text-xs font-mono text-gray-400 shrink-0">
             {currentIndex + 1} / {questions.length}
           </span>
         </div>
@@ -120,7 +120,7 @@ export default function QuizContainer() {
         />
       </main>
 
-      <footer className="border-t border-gray-800 bg-gray-900/80 backdrop-blur sticky bottom-0">
+      <footer className="border-t border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky bottom-0">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
           {/* Left side */}
           {isExam ? (
