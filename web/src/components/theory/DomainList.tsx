@@ -57,14 +57,14 @@ export default function DomainList({ cert, onSelect }: Props) {
           className={`w-full flex items-center gap-4 p-4 rounded-xl border bg-gray-900/50 transition-all duration-150 ${DOMAIN_STYLES[i % DOMAIN_STYLES.length]}`}
         >
           <span
-            className="flex-shrink-0 w-9 h-9 rounded-lg border border-current flex items-center justify-center font-bold text-base opacity-80"
+            className="shrink-0 w-9 h-9 rounded-lg border border-current flex items-center justify-center font-bold text-base opacity-80"
           >
             D{domain.number}
           </span>
           <span className="flex-1 text-left text-sm font-medium text-white leading-snug">
             {domain.name}
           </span>
-          <ChevronRight className="w-4 h-4 flex-shrink-0 opacity-50" />
+          <ChevronRight className="w-4 h-4 shrink-0 opacity-50" />
         </button>
       ))}
     </div>

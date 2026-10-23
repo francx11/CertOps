@@ -47,18 +47,18 @@ export default function TheoryView() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <header className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur-sm border-b border-gray-800">
+      <header className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur-xs border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors flex-shrink-0"
+            className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors shrink-0"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
           <div className="flex items-center gap-2 min-w-0">
-            <GraduationCap className="w-5 h-5 text-purple-400 flex-shrink-0" />
+            <GraduationCap className="w-5 h-5 text-purple-400 shrink-0" />
             <div className="min-w-0">
               <p className="text-xs text-gray-500 leading-none mb-0.5">
                 {certLabel} · Teoría
@@ -70,7 +70,7 @@ export default function TheoryView() {
           </div>
 
           {quizLoading && (
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto flex-shrink-0" />
+            <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto shrink-0" />
           )}
         </div>
 

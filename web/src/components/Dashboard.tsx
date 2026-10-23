@@ -39,7 +39,7 @@ function CountSelector({
           const n = parseInt(e.target.value)
           if (!isNaN(n) && n >= 1) onChange(n)
         }}
-        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
         placeholder="Número personalizado"
       />
     </div>
@@ -112,7 +112,7 @@ export default function Dashboard() {
               <select
                 value={selectedCert}
                 onChange={e => setSelectedCert(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2.5 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               >
                 {certs.map(c => (
                   <option key={c} value={c}>

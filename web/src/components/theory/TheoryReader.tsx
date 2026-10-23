@@ -80,7 +80,7 @@ function TableOfContents({ entries }: TocProps) {
         <ol className="px-4 pb-4 space-y-1 border-t border-gray-700/60">
           {h2s.map((entry, i) => (
             <li key={entry.id} className="flex items-baseline gap-2 pt-1">
-              <span className="text-xs font-mono text-gray-500 w-5 flex-shrink-0">{i + 1}.</span>
+              <span className="text-xs font-mono text-gray-500 w-5 shrink-0">{i + 1}.</span>
               <button
                 onClick={() => scrollTo(entry.id)}
                 className="text-sm text-blue-400 hover:text-blue-300 hover:underline text-left transition-colors leading-snug"
@@ -149,7 +149,7 @@ export default function TheoryReader({ cert, domain, onStartQuiz }: Props) {
           {children}
         </code>
       ) : (
-        <code className="text-blue-300 bg-blue-950/50 px-1.5 py-0.5 rounded text-sm font-mono">
+        <code className="text-blue-300 bg-blue-950/50 px-1.5 py-0.5 rounded-sm text-sm font-mono">
           {children}
         </code>
       )
@@ -226,7 +226,7 @@ export default function TheoryReader({ cert, domain, onStartQuiz }: Props) {
         </article>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur-sm border-t border-gray-800 p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-950/95 backdrop-blur-xs border-t border-gray-800 p-4">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={onStartQuiz}
